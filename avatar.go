@@ -38,7 +38,7 @@ var (
 	defaultNInitials = 1
 )
 
-func NewAvatarFromInitials(text []byte, options *InitialsOptions) (*Initials, error) {
+func NewAvatarFromInitials(text string, options *InitialsOptions) (*Initials, error) {
 	if options == nil {
 		options = &InitialsOptions{}
 	}

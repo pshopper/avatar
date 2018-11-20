@@ -17,15 +17,16 @@ import (
 )
 
 type InitialsOptions struct {
-	BgColor   color.Color
-	Size      int
-	FontPath  string
-	TextColor color.Color
-	NInitials int
+	BgColor       color.Color
+	Size          int
+	FontPath      string
+	TextColor     color.Color
+	NInitials     int
+	GradientTable GradientTable
 }
 
 type Initials struct {
-	source        []byte
+	source        string
 	options       *InitialsOptions
 	originalImage image.Image
 	squareImage   image.Image
@@ -33,13 +34,14 @@ type Initials struct {
 }
 
 func (i Initials) Source() []byte {
-	return i.source
+	return []byte(i.source)
 }
 
 func (i Initials) loadOriginalImage() (image.Image, error) {
 	text := i.source
 
 	nInitials := i.options.nInitials()
+
 	if nInitials > 0 {
 		text = getInitials(text, nInitials)
 	}
@@ -47,14 +49,19 @@ func (i Initials) loadOriginalImage() (image.Image, error) {
 	size := i.options.size() * 3 // 3 times bigger for better quality
 
 	// Draw background img
-	imgRect := image.Rect(0, 0, size, size)
-	dst := image.NewRGBA(imgRect)
-	draw.Draw(
-		dst,
-		dst.Bounds(),
-		image.NewUniform(i.options.bgColor()),
-		image.ZP,
-		draw.Src)
+	var dst *image.RGBA
+	if len(i.options.GradientTable) != 0 {
+		dst = newGradientImage(size, size, i.options.GradientTable)
+	} else {
+		imgRect := image.Rect(0, 0, size, size)
+		dst = image.NewRGBA(imgRect)
+		draw.Draw(
+			dst,
+			dst.Bounds(),
+			image.NewUniform(i.options.bgColor()),
+			image.ZP,
+			draw.Src)
+	}
 
 	ftFont, err := i.options.font()
 	if err != nil {
@@ -62,7 +69,7 @@ func (i Initials) loadOriginalImage() (image.Image, error) {
 	}
 
 	fontFace := truetype.NewFace(ftFont, &truetype.Options{
-		Size: getFontSizeThatFits(text, float64(size), ftFont),
+		Size: getFontSizeThatFits([]byte(text), float64(size), ftFont),
 	})
 
 	fd := font.Drawer{
@@ -72,10 +79,10 @@ func (i Initials) loadOriginalImage() (image.Image, error) {
 	}
 
 	// Figure out baseline and adv for string in img
-	txtWidth := fd.MeasureBytes(text)
+	txtWidth := fd.MeasureBytes([]byte(text))
 	txtWidthInt := int(txtWidth >> 6)
 
-	bounds, _ := fd.BoundBytes(text)
+	bounds, _ := fd.BoundBytes([]byte(text))
 	txtHeight := bounds.Max.Y - bounds.Min.Y
 	txtHeightInt := int(txtHeight >> 6)
 
@@ -84,7 +91,7 @@ func (i Initials) loadOriginalImage() (image.Image, error) {
 
 	fd.Dot = fixed.Point26_6{X: fixed.Int26_6(advLine << 6), Y: fixed.Int26_6(baseline << 6)}
 
-	fd.DrawBytes(text)
+	fd.DrawBytes([]byte(text))
 
 	return dst, nil
 }
@@ -156,42 +163,42 @@ func getFontSizeThatFits(text []byte, imgWidth float64, ftFont *truetype.Font) f
 	return ratio * (imgWidth - (40./100)*imgWidth)
 }
 
-func getInitials(text []byte, nChars int) []byte {
+func getInitials(text string, nChars int) string {
 	if len(text) == 0 {
-		return []byte("")
+		return ""
 	}
 
-	var initials = []byte{}
-	var previous = byte(' ')
+	var initials []rune
+	var previous = ' '
 
 	regEmail := regexp.MustCompile("^(((([a-zA-Z]|\\d|[!#\\$%&'\\*\\+\\-\\/=\\?\\^_`{\\|}~]|[\\x{00A0}-\\x{D7FF}\\x{F900}-\\x{FDCF}\\x{FDF0}-\\x{FFEF}])+(\\.([a-zA-Z]|\\d|[!#\\$%&'\\*\\+\\-\\/=\\?\\^_`{\\|}~]|[\\x{00A0}-\\x{D7FF}\\x{F900}-\\x{FDCF}\\x{FDF0}-\\x{FFEF}])+)*)|((\\x22)((((\\x20|\\x09)*(\\x0d\\x0a))?(\\x20|\\x09)+)?(([\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x7f]|\\x21|[\\x23-\\x5b]|[\\x5d-\\x7e]|[\\x{00A0}-\\x{D7FF}\\x{F900}-\\x{FDCF}\\x{FDF0}-\\x{FFEF}])|(\\([\\x01-\\x09\\x0b\\x0c\\x0d-\\x7f]|[\\x{00A0}-\\x{D7FF}\\x{F900}-\\x{FDCF}\\x{FDF0}-\\x{FFEF}]))))*(((\\x20|\\x09)*(\\x0d\\x0a))?(\\x20|\\x09)+)?(\\x22)))@((([a-zA-Z]|\\d|[\\x{00A0}-\\x{D7FF}\\x{F900}-\\x{FDCF}\\x{FDF0}-\\x{FFEF}])|(([a-zA-Z]|\\d|[\\x{00A0}-\\x{D7FF}\\x{F900}-\\x{FDCF}\\x{FDF0}-\\x{FFEF}])([a-zA-Z]|\\d|-|\\.|_|~|[\\x{00A0}-\\x{D7FF}\\x{F900}-\\x{FDCF}\\x{FDF0}-\\x{FFEF}])*([a-zA-Z]|\\d|[\\x{00A0}-\\x{D7FF}\\x{F900}-\\x{FDCF}\\x{FDF0}-\\x{FFEF}])))\\.)+(([a-zA-Z]|[\\x{00A0}-\\x{D7FF}\\x{F900}-\\x{FDCF}\\x{FDF0}-\\x{FFEF}])|(([a-zA-Z]|[\\x{00A0}-\\x{D7FF}\\x{F900}-\\x{FDCF}\\x{FDF0}-\\x{FFEF}])([a-zA-Z]|\\d|-|\\.|_|~|[\\x{00A0}-\\x{D7FF}\\x{F900}-\\x{FDCF}\\x{FDF0}-\\x{FFEF}])*([a-zA-Z]|[\\x{00A0}-\\x{D7FF}\\x{F900}-\\x{FDCF}\\x{FDF0}-\\x{FFEF}])))\\.?$")
-	skipFromAt := regEmail.Match(text)
+	skipFromAt := regEmail.MatchString(text)
 
-	for _, ch := range text[:] {
-		if skipFromAt == true && rune(ch) == '@' {
+	for _, ch := range []rune(text) {
+		if skipFromAt == true && ch == '@' {
 			break
 		}
 
-		if isSymbol(rune(ch)) {
+		if isSymbol(ch) {
 			previous = ch
 			continue
 		}
 
-		if ((unicode.IsUpper(rune(ch)) && unicode.IsLower(rune(previous))) || (unicode.IsLower(rune(ch)) && len(initials) == 0)) || isSymbol(rune(previous)) {
+		if ((unicode.IsUpper(ch) && unicode.IsLower(previous)) || (unicode.IsLower(ch) && len(initials) == 0)) || isSymbol(previous) {
 			initials = append(initials, ch)
 			previous = ch
 		}
 	}
 
-	for i := len(initials); i < nChars && len(text) > i; i++ {
+	for i := len(initials); i < nChars && len([]rune(text)) > i; i++ {
 		if isSymbol(rune(text[i])) {
 			continue
 		}
 
-		initials = append(initials, text[i])
+		initials = append(initials, []rune(text)[i])
 	}
 
-	return initials
+	return string(initials)
 }
 
 func isSymbol(ch rune) bool {
