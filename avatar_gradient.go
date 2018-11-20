@@ -45,6 +45,14 @@ func MustParseHex(s string) Color {
 	return Color{Color: c}
 }
 
+func ParseHex(s string) (Color, error) {
+	c, err := colorful.Hex(s)
+	if err != nil {
+		return Color{}, err
+	}
+	return Color{Color: c}, nil
+}
+
 func newGradientImage(height, width int, gradientTable GradientTable) *image.RGBA {
 	img := image.NewRGBA(image.Rect(0, 0, width, height))
 
