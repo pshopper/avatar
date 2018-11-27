@@ -85,7 +85,7 @@ func (i Initials) loadOriginalImage() (image.Image, error) {
 		Face: fontFace,
 	}
 
-	if i.options.FontSize != 0 {
+	if i.options.FontSize == 0 {
 		// Figure out baseline and adv for string in img
 		txtWidth := fd.MeasureBytes([]byte(text))
 		txtWidthInt := int(txtWidth >> 6)
