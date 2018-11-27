@@ -85,18 +85,20 @@ func (i Initials) loadOriginalImage() (image.Image, error) {
 		Face: fontFace,
 	}
 
-	// Figure out baseline and adv for string in img
-	txtWidth := fd.MeasureBytes([]byte(text))
-	txtWidthInt := int(txtWidth >> 6)
+	if i.options.FontSize != 0 {
+		// Figure out baseline and adv for string in img
+		txtWidth := fd.MeasureBytes([]byte(text))
+		txtWidthInt := int(txtWidth >> 6)
 
-	bounds, _ := fd.BoundBytes([]byte(text))
-	txtHeight := bounds.Max.Y - bounds.Min.Y
-	txtHeightInt := int(txtHeight >> 6)
+		bounds, _ := fd.BoundBytes([]byte(text))
+		txtHeight := bounds.Max.Y - bounds.Min.Y
+		txtHeightInt := int(txtHeight >> 6)
 
-	advLine := (size / 2) - (txtWidthInt / 2)
-	baseline := (size / 2) + (txtHeightInt / 2)
+		advLine := (size / 2) - (txtWidthInt / 2)
+		baseline := (size / 2) + (txtHeightInt / 2)
 
-	fd.Dot = fixed.Point26_6{X: fixed.Int26_6(advLine << 6), Y: fixed.Int26_6(baseline << 6)}
+		fd.Dot = fixed.Point26_6{X: fixed.Int26_6(advLine << 6), Y: fixed.Int26_6(baseline << 6)}
+	}
 
 	fd.DrawBytes([]byte(text))
 
