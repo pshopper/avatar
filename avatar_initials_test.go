@@ -53,7 +53,8 @@ func TestInitialsGradient_Circle(t *testing.T) {
 
 	newAvatar, err := NewAvatarFromInitials("АН", &InitialsOptions{
 		Size:      size,
-		NInitials: 0,
+		FontSize:  float64(size) / 2,
+		NInitials: 2,
 		FontPath:  getTestResource("test_data", "SFProText-Medium.ttf"),
 		GradientTable: GradientTable{
 			{MustParseHex("#82a7e8"), 0.0},

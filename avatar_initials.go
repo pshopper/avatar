@@ -70,7 +70,7 @@ func (i Initials) loadOriginalImage() (image.Image, error) {
 		return nil, err
 	}
 
-	fontSize := i.options.FontSize
+	fontSize := i.options.FontSize * 3
 	if fontSize == 0 {
 		fontSize = getFontSizeThatFits([]byte(text), float64(size), ftFont)
 	}
