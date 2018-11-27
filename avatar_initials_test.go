@@ -51,7 +51,7 @@ func TestInitials_Square(t *testing.T) {
 func TestInitialsGradient_Circle(t *testing.T) {
 	size := 800
 
-	newAvatar, err := NewAvatarFromInitials("АН", &InitialsOptions{
+	newAvatar, err := NewAvatarFromInitials("ХЦ", &InitialsOptions{
 		Size:      size,
 		FontSize:  float64(size) / 2,
 		NInitials: 2,

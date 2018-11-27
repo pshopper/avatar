@@ -85,7 +85,7 @@ func (i Initials) loadOriginalImage() (image.Image, error) {
 		Face: fontFace,
 	}
 
-	if i.options.FontSize == 0 {
+	if fontSize == 0 {
 		// Figure out baseline and adv for string in img
 		txtWidth := fd.MeasureBytes([]byte(text))
 		txtWidthInt := int(txtWidth >> 6)
@@ -96,6 +96,11 @@ func (i Initials) loadOriginalImage() (image.Image, error) {
 
 		advLine := (size / 2) - (txtWidthInt / 2)
 		baseline := (size / 2) + (txtHeightInt / 2)
+
+		fd.Dot = fixed.Point26_6{X: fixed.Int26_6(advLine << 6), Y: fixed.Int26_6(baseline << 6)}
+	} else {
+		advLine := i.options.Size / 2
+		baseline := i.options.Size * 2
 
 		fd.Dot = fixed.Point26_6{X: fixed.Int26_6(advLine << 6), Y: fixed.Int26_6(baseline << 6)}
 	}
@@ -203,7 +208,7 @@ func getInitials(text string, nChars int) string {
 	}
 
 	for i := len(initials); i < nChars && len([]rune(text)) > i; i++ {
-		if isSymbol(rune(text[i])) {
+		if isSymbol([]rune(text)[i]) {
 			continue
 		}
 
