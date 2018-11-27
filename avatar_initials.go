@@ -20,6 +20,8 @@ type InitialsOptions struct {
 	BgColor       color.Color
 	Size          int
 	FontPath      string
+	FontSize      float64
+	Font          *truetype.Font
 	TextColor     color.Color
 	NInitials     int
 	GradientTable GradientTable
@@ -68,8 +70,13 @@ func (i Initials) loadOriginalImage() (image.Image, error) {
 		return nil, err
 	}
 
+	fontSize := i.options.FontSize
+	if fontSize == 0 {
+		fontSize = getFontSizeThatFits([]byte(text), float64(size), ftFont)
+	}
+
 	fontFace := truetype.NewFace(ftFont, &truetype.Options{
-		Size: getFontSizeThatFits([]byte(text), float64(size), ftFont),
+		Size: fontSize,
 	})
 
 	fd := font.Drawer{
@@ -122,11 +129,14 @@ func (o InitialsOptions) nInitials() int {
 	if o.NInitials == 0 {
 		return defaultNInitials
 	}
-
 	return o.NInitials
 }
 
 func (o InitialsOptions) font() (*truetype.Font, error) {
+	if o.Font != nil {
+		return o.Font, nil
+	}
+
 	if strings.TrimSpace(o.FontPath) == "" {
 		return nil, errors.New("No font path given")
 	}

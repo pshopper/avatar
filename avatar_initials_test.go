@@ -49,11 +49,11 @@ func TestInitials_Square(t *testing.T) {
 }
 
 func TestInitialsGradient_Circle(t *testing.T) {
-	size := 162
+	size := 800
 
-	newAvatar, err := NewAvatarFromInitials("Иванов Иван", &InitialsOptions{
+	newAvatar, err := NewAvatarFromInitials("АН", &InitialsOptions{
 		Size:      size,
-		NInitials: 2,
+		NInitials: 0,
 		FontPath:  getTestResource("test_data", "SFProText-Medium.ttf"),
 		GradientTable: GradientTable{
 			{MustParseHex("#82a7e8"), 0.0},
